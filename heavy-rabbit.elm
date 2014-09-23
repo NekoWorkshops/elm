@@ -21,21 +21,11 @@ rabbitImg = image 80 100 "http://www.canardpc.com/img/couly/img141.png"
 
 bgBlue = rgb 100 220 255
 
-formatDirection : {x: Int, y: Int} -> String
-formatDirection direction = 
-    concat [
-           "Arrows direction: {"
-         , show direction.x 
-         , ", "
-         , show direction.y 
-         , "}"
-    ]
-
 render: (Int, Int) -> {direction:Direction, rabbit:Position} -> Element
 render (width, heigth) model = collage width heigth [
              filled bgBlue <| rect (toFloat width) (toFloat heigth)
            , moveX (toFloat <| fst <| model.rabbit) <| toForm rabbitImg
-           , move (0, 80) <| toForm <| leftAligned <| toText <| formatDirection model.direction
+           , move (0, 80) <| toForm <| leftAligned <| toText <| "Arrows = " ++ show model.direction
        ]
 
 input : Signal Direction
