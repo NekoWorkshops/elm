@@ -8,29 +8,29 @@ type Direction = {x:Int, y:Int}
 
 type Model = {
       direction:Direction
-      , rabbit:Position
+      , rabbitPosition:Position
     }
 
 model : Model
 model = {
   direction = { x=0, y=0 }
-  , rabbit = (0, 0)
+  , rabbitPosition = (0, 0)
   }
   
 walk dir m = 
-    let (x, y) = m.rabbit
+    let (x, y) = m.rabbitPosition
     in { m | direction <- dir
-           , rabbit <- (x + dir.x, y) }
+           , rabbitPosition <- (x + dir.x, y) }
                  
 -- Display
 rabbitImg = image 80 100 "http://www.canardpc.com/img/couly/img141.png"
 
 bgBlue = rgb 100 220 255
 
-render: (Int, Int) -> {direction:Direction, rabbit:Position} -> Element
+render: (Int, Int) -> {direction:Direction, rabbitPosition:Position} -> Element
 render (width, heigth) model = collage width heigth [
              filled bgBlue <| rect (toFloat width) (toFloat heigth)
-           , moveX (toFloat <| fst <| model.rabbit) <| toForm rabbitImg
+           , moveX (toFloat <| fst <| model.rabbitPosition) <| toForm rabbitImg
            , move (0, 80) <| toForm <| leftAligned <| toText <| "Arrows = " ++ show model.direction
        ]
 
