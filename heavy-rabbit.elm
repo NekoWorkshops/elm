@@ -16,7 +16,8 @@ model = {
   direction = { x=0, y=0 }
   , rabbitPosition = (0, 0)
   }
-  
+
+walk : Direction -> Model -> Model  
 walk dir m = 
     let (x, y) = m.rabbitPosition
     in { m | direction <- dir
