@@ -6,6 +6,12 @@ type Position = (Int, Int)
 
 type Direction = {x:Int, y:Int}
 
+type Model = {
+      direction:Direction
+      , rabbit:Position
+    }
+
+model : Model
 model = {
   direction = { x=0, y=0 }
   , rabbit = (0, 0)
