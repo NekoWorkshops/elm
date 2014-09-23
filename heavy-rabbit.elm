@@ -24,15 +24,23 @@ walk dir m =
            , rabbitPosition <- (x + dir.x, y) }
                  
 -- Display
-rabbitImg = image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+renderRabbit : Form
+renderRabbit = toForm <| image 80 100 "http://www.canardpc.com/img/couly/img141.png"
 
-bgBlue = rgb 100 220 255
+renderDirection: Direction -> Form
+renderDirection direction = toForm <| leftAligned <| toText <| "Arrows = " ++ show direction
+
+renderBackground : (Int, Int) -> Form
+renderBackground (width, heigth) =
+    let blue = rgb 100 220 255
+    in filled blue <| rect (toFloat width) (toFloat heigth)
 
 render: (Int, Int) -> {direction:Direction, rabbitPosition:Position} -> Element
-render (width, heigth) model = collage width heigth [
-             filled bgBlue <| rect (toFloat width) (toFloat heigth)
-           , moveX (toFloat <| fst <| model.rabbitPosition) <| toForm rabbitImg
-           , move (0, 80) <| toForm <| leftAligned <| toText <| "Arrows = " ++ show model.direction
+render (width, heigth) model = 
+    collage width heigth [
+                 renderBackground (width, heigth)
+                , moveX (toFloat <| fst <| model.rabbitPosition) renderRabbit
+                , move (0, 80) <| renderDirection model.direction
        ]
 
 input : Signal Direction
