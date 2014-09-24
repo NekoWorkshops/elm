@@ -31,14 +31,14 @@ renderDirection: Direction -> Form
 renderDirection direction = toForm <| leftAligned <| toText <| "Arrows = " ++ show direction
 
 renderBackground : (Int, Int) -> Form
-renderBackground (width, heigth) =
+renderBackground (width, height) =
     let blue = rgb 100 220 255
-    in filled blue <| rect (toFloat width) (toFloat heigth)
+    in filled blue <| rect (toFloat width) (toFloat height)
 
 render: (Int, Int) -> {direction:Direction, rabbitPosition:Position} -> Element
-render (width, heigth) model = 
-    collage width heigth [
-                 renderBackground (width, heigth)
+render (width, height) model = 
+    collage width height [
+                 renderBackground (width, height)
                 , moveX (toFloat <| fst <| model.rabbitPosition) renderRabbit
                 , move (0, 80) <| renderDirection model.direction
        ]
