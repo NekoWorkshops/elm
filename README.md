@@ -39,7 +39,7 @@ renderBackground (width, height) =
     let blue = rgb 100 220 255
     in filled blue <| rect (toFloat width) (toFloat height)
     
-main = collage 800 600 [renderBackground (800, 8000), renderRabbit] 
+main = collage 800 600 [renderBackground (800, 800), renderRabbit] 
 ```
 
 
