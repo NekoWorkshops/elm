@@ -19,7 +19,7 @@ main = lift asText Mouse.position
 
 ## Affichage d'une image
 
-Utilisation de l'API [Element](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Element)
+Application de la fonction [image](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Element#image)
 
 ```elm
 main : Element
@@ -28,7 +28,11 @@ main = image 80 100 "http://www.canardpc.com/img/couly/img141.png"
 
 ## Composition d'images dans un cadre statique
 
-Utilisation de l'API [Collage](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Collage)
+Application des fonctions :
+* [image](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Element#image)
+* [toForm](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Collage#toForm)
+* [filled](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Collage#filled)
+* [collage](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Collage#collage)
 
 ```elm
 renderRabbit : Form
