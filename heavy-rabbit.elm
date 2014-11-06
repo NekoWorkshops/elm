@@ -2,37 +2,43 @@ import Keyboard
 import Window
 
 -- Model
+type Rectangle = {
+  dimension: (Int, Int)
+  , color: Color}
 type Position = (Int, Int)
 type Direction = {x:Int, y:Int}
 type Model = {
     direction:Direction
-    , rabbitPosition:Position}
-
+    , position:Position
+    , speed:Int}
+  
 model : Model
-model = {
-    direction = { x=0, y=0 }
-    , rabbitPosition = (0, 0)}
+model = {direction = {x=0, y=0}, position =(0,0), speed=6}
 
 
 walk : Direction -> Model -> Model
 walk dir m = 
-    let (x, y) = m.rabbitPosition
-    in { m | direction <- dir, rabbitPosition <- (x + dir.x, y) }
+    let (x, y) = m.position
+    in { m | direction <- dir, position <- (x + dir.x*m.speed, y + dir.y*m.speed) }
 
 -- Display
 renderRabbit : Form
-renderRabbit = toForm <| image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+renderRabbit = let height = 64
+               in moveY (toFloat height / toFloat 2) (toForm <| image 128 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png")
 
-renderBackground : (Int, Int) -> Form
-renderBackground (width, height) =
-    let blue = rgb 100 220 255
-    in filled blue <| rect (toFloat width) (toFloat height)
+renderBackground : Rectangle -> Form
+renderBackground r =
+    filled r.color <| rect (toFloat <| fst <| r.dimension) (toFloat <| snd <| r.dimension)
 
 render: (Int, Int) -> Model -> Element
-render (width, height) model = 
-    collage width height [
-        renderBackground (width, height)
-        , moveX (toFloat <| fst <| model.rabbitPosition) renderRabbit]
+render (width, height) model =
+    let sky = {dimension=(width, height), color= rgb 100 220 255}
+        groundHeight = toFloat height / toFloat 2
+        ground = {dimension=(width, round(groundHeight)), color= rgb 74 163 41}
+    in collage width height [
+        renderBackground sky
+        , moveY (-groundHeight / 2) (renderBackground ground)
+        , move (toFloat <| fst <| model.position, toFloat <| snd <| model.position) renderRabbit]
 
 delta : Signal Time
 delta = fps 25
