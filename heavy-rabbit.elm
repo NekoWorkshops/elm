@@ -13,7 +13,7 @@ type Model = {
     , speed:Int}
   
 model : Model
-model = {direction = {x=0, y=0}, position =(0,0), speed=6}
+model = {direction = {x=0, y=0}, position =(0,0), speed=10}
 
 
 walk : Direction -> Model -> Model
@@ -23,8 +23,12 @@ walk dir m =
 
 -- Display
 renderRabbit : Form
-renderRabbit = let height = 64
-               in moveY (toFloat height / toFloat 2) (toForm <| image 128 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png")
+renderRabbit = let height = 128
+               in moveY (toFloat height / toFloat 2) (toForm <| image 256 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png")
+
+renderBadSausage : Form
+renderBadSausage = let height = 41
+                   in move (100, 100) (toForm <| image 128 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/saucisse_pourrie.png")
 
 renderBackground : Rectangle -> Form
 renderBackground r =
@@ -38,7 +42,8 @@ render (width, height) model =
     in collage width height [
         renderBackground sky
         , moveY (-groundHeight / 2) (renderBackground ground)
-        , move (toFloat <| fst <| model.position, toFloat <| snd <| model.position) renderRabbit]
+        , move (toFloat <| fst <| model.position, toFloat <| snd <| model.position) renderRabbit
+        , renderBadSausage]
 
 delta : Signal Time
 delta = fps 25
