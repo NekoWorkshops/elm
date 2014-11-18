@@ -1,12 +1,18 @@
-# Atelier Programmation Fonctionnelle Réactive (FRP) avec [ELM](http://elm-lang.org)
+# Atelier découverte du langage [ELM](http://elm-lang.org)
 
 ## Introduction
 
-La Programmation Fonctionnelle Réactive (PFR) est basée sur les flux de données et la propagation des changements à travers l'application de fonctions composites sur les données à traiter.
+ELM est un langage de programmation fonctionnel basé sur Haskell issu des de la thèse de Evan Czaplicki.
+Il inclut un cadre de développement suffisamment complet pour créer des applications web réactives en générant le HTML, CSS et JS.
 
-La donnée dans l'univers de la FRP est appelée *Signal*. Cette donnée peut provenir des périphériques d'entrée tels que la souris et le clavier ou bien d'une réponse d'un serveur.
+Dans cet atelier, nous allons nous intéresser au traitement de données en flux et la propagation des changements à travers l'application de fonctions composites sur ces données.
 
-Dans le langage ELM, les *signaux* de valeurs (qui varient dans le temps) peuvent être traités en flux en utilisant la fonction [lift](http://elm-lang.org/learn/Syntax.elm#lifting) :
+Nous verrons également que ELM basé sur le concept FRP (Fonctionnal Reactive Programming) ne l'est que partiellement.
+
+## Signal
+
+La donnée dans l'univers ELM est appelée *Signal*. Cette donnée peut provenir des périphériques d'entrée tels que la souris et le clavier ou bien d'une réponse d'un serveur. Ces *signaux* de valeurs (qui varient dans le temps) peuvent être traités en flux en utilisant la fonction [lift](http://elm-lang.org/learn/Syntax.elm#lifting).
+Affichons les coordonnées de la souris :
 
 ```elm
 import Mouse
@@ -15,7 +21,7 @@ main : Signal Element
 main = lift asText Mouse.position
 ```
 
-À chaque modification de la position de la souris, `lift` appliquera la fonction [asText](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Text) sur la propriété `position`.
+À chaque envoi de la position de la souris, `lift` appliquera la fonction [asText](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Text) sur la propriété `position` du signal [Mouse](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Mouse).
 
 ## Affichage d'une image
 
@@ -23,12 +29,17 @@ Application de la fonction [image](http://library.elm-lang.org/catalog/elm-lang-
 
 ```elm
 main : Element
-main = image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+main = image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
 ```
+
+Notons que cette image s'affiche dans le coin haut-gauche du cadre HTML
 
 ## Composition d'images dans un cadre statique
 
+La composition d'image s'apparente à un empilement de calque (au sens Gimp ou Photoshop).
+
 Application des fonctions :
+* [<|](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Basics#%3C|)
 * [image](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Element#image)
 * [toForm](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Collage#toForm)
 * [filled](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Graphics-Collage#filled)
@@ -36,7 +47,7 @@ Application des fonctions :
 
 ```elm
 renderRabbit : Form
-renderRabbit = toForm <| image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+renderRabbit = toForm <| image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
@@ -47,6 +58,8 @@ main : Element
 main = collage 800 600 [renderBackground (800, 800), renderRabbit] 
 ```
 
+Nous remarquons que l'image de la soucoupe volante est centrée. En effet, la fonction `collage` dessine chaque `Form` au centre du cadre.
+
 ## Composition d'images dans un cadre dynamique
 
 Utilisation de l'API [Window](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Window) pour récupérer les dimensions du cadre `div`
@@ -56,7 +69,7 @@ import Window
 
 -- Display
 renderRabbit : Form
-renderRabbit = toForm <| image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+renderRabbit = toForm <| image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
