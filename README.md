@@ -54,13 +54,14 @@ renderBackground (width, height) =
     let blue = rgb 100 220 255
     in filled blue <| rect (toFloat width) (toFloat height)
 
-main : Element    
+main : Element
 main = collage 800 600 [renderBackground (800, 800), renderRabbit] 
 ```
 
 Nous remarquons que l'image de la soucoupe volante est centrée. En effet, la fonction `collage` dessine chaque `Form` au centre du cadre.
+Par ailleurs, la taille du cadre est en dur.
 
-## Composition d'images dans un cadre dynamique
+## Composition d'images dans un cadre à taille variable
 
 Utilisation de l'API [Window](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Window) pour récupérer les dimensions du cadre `div`
 
@@ -97,33 +98,38 @@ main : Signal Element
 main = lift asText Keyboard.arrows
 ```
 
-## Bouger le lapin avec les flèches gauche et droite
+## Bouger le lapin avec les flèches du clavier
 
 ```elm
 import Keyboard
 import Window
 
 -- Model
-type Position = (Int, Int)
+type Position = {x:Int, y:Int}
 type Direction = {x:Int, y:Int}
 type Model = {
     direction:Direction
-    , rabbitPosition:Position}
+    , position:Position
+    }
 
 model : Model
 model = {
     direction = { x=0, y=0 }
-    , rabbitPosition = (0, 0)}
+    , position = { x=0, y=0 }
+    }
 
 
 walk : Direction -> Model -> Model
-walk dir m = 
-    let (x, y) = m.rabbitPosition
-    in { m | direction <- dir, rabbitPosition <- (x + dir.x, y) }
+walk dir m =
+    let pos_x = m.position.x
+        pos_y = m.position.y
+    in { m | direction <- dir,
+             position <- { x=pos_x + dir.x, y=pos_y + dir.y}
+       }
 
 -- Display
 renderRabbit : Form
-renderRabbit = toForm <| image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+renderRabbit = toForm <| image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
@@ -131,10 +137,10 @@ renderBackground (width, height) =
     in filled blue <| rect (toFloat width) (toFloat height)
 
 render: (Int, Int) -> Model -> Element
-render (width, height) model = 
+render (width, height) model =
     collage width height [
         renderBackground (width, height)
-        , moveX (toFloat <| fst <| model.rabbitPosition) renderRabbit]
+        , move (toFloat <| model.position.x, toFloat <| model.position.y) renderRabbit]
 
 input : Signal Direction
 input = Keyboard.arrows
@@ -143,7 +149,7 @@ main : Signal Element
 main = lift2 render Window.dimensions (foldp walk model input)
 ```
 
-## Bouger le lapin avec les flèches gauche et droite en laissant appuyé la touche du clavier
+## Bouger le lapin en laissant appuyé la touche flèche du clavier
 
 Utilisation de la fonction [fps](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Time#fps)
 Utilisation de la fonction [sampleOn](http://library.elm-lang.org/catalog/elm-lang-Elm/0.13/Signal#sampleOn)
@@ -153,26 +159,31 @@ import Keyboard
 import Window
 
 -- Model
-type Position = (Int, Int)
+type Position = {x:Int, y:Int}
 type Direction = {x:Int, y:Int}
 type Model = {
     direction:Direction
-    , rabbitPosition:Position}
+    , position:Position
+    }
 
 model : Model
 model = {
     direction = { x=0, y=0 }
-    , rabbitPosition = (0, 0)}
+    , position = { x=0, y=0 }
+    }
 
 
 walk : Direction -> Model -> Model
-walk dir m = 
-    let (x, y) = m.rabbitPosition
-    in { m | direction <- dir, rabbitPosition <- (x + dir.x, y) }
+walk dir m =
+    let pos_x = m.position.x
+        pos_y = m.position.y
+    in { m | direction <- dir,
+             position <- { x=pos_x + dir.x, y=pos_y + dir.y}
+       }
 
 -- Display
 renderRabbit : Form
-renderRabbit = toForm <| image 80 100 "http://www.canardpc.com/img/couly/img141.png"
+renderRabbit = toForm <| image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
@@ -180,10 +191,10 @@ renderBackground (width, height) =
     in filled blue <| rect (toFloat width) (toFloat height)
 
 render: (Int, Int) -> Model -> Element
-render (width, height) model = 
+render (width, height) model =
     collage width height [
         renderBackground (width, height)
-        , moveX (toFloat <| fst <| model.rabbitPosition) renderRabbit]
+        , move (toFloat <| model.position.x, toFloat <| model.position.y) renderRabbit]
 
 delta : Signal Time
 delta = fps 25
@@ -193,5 +204,90 @@ input = sampleOn delta Keyboard.arrows
 
 main : Signal Element
 main = lift2 render Window.dimensions (foldp walk model input)
+```
+
+## Refactor
+
+```elm
+import Keyboard
+import Window
+
+
+-- Input
+
+delta : Signal Time
+delta = fps 25
+
+input : Signal Direction
+input = sampleOn delta Keyboard.arrows
+
+-- Model
+type Position = {x:Int, y:Int}
+type Direction = {x:Int, y:Int}
+type Model = {
+    direction:Direction
+    , position:Position
+    , speed:Int}
+
+rabbitModel : Model
+rabbitModel = {
+    direction = { x=0, y=0 }
+    , position = { x=0, y=0 }
+    ,speed=10}
+
+sausageModel : Model
+sausageModel = {
+    direction = { x=-1, y=0 }
+    , position = { x=200, y=50 }
+    ,speed=1}
+
+walk : Direction -> Model -> Model
+walk dir m =
+    let pos_x = m.position.x
+        pos_y = m.position.y
+        speed = m.speed
+    in { m | direction <- dir,
+             position <- { x=pos_x + dir.x*speed, y=pos_y + dir.y*speed}
+       }
+
+-- Display
+renderRabbit : Form
+renderRabbit = toForm <| image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
+
+rabbitAt : (Int, Int) -> Model -> Element
+rabbitAt (width, height) model =
+    collage width height [
+        move (toFloat <| model.position.x, toFloat <| model.position.y) renderRabbit]
+
+rabbit : Signal Element
+rabbit = lift2 rabbitAt Window.dimensions (foldp walk rabbitModel input)
+
+renderSausage : Form
+renderSausage = let height = 41
+                in move (100, 100) (toForm <| image 128 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/saucisse_pourrie.png")
+
+sausageAt : (Int, Int) -> Model -> Element
+sausageAt (width, height) model =
+    collage width height [
+        move (toFloat <| model.position.x, toFloat <| model.position.y) renderSausage]
+
+
+renderBackground : (Int, Int) -> Form
+renderBackground (width, height) =
+    let blue = rgb 100 220 255
+    in filled blue <| rect (toFloat width) (toFloat height)
+
+backgroundAt : (Int, Int) -> Element
+backgroundAt (width, height) =
+    collage width height [renderBackground (width, height)]
+
+background : Signal Element
+background = lift backgroundAt Window.dimensions
+
+
+merge : Element -> Element -> Element
+merge fig1 fig2 = layers [fig1, fig2]
+
+main = lift2 merge background rabbit
 ```
 
