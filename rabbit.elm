@@ -1,11 +1,9 @@
 import Keyboard
 import Window
 
-
 -- Input
-
 delta : Signal Time
-delta = fps 25
+delta = fps 60
 
 input : Signal Direction
 input = sampleOn delta Keyboard.arrows
@@ -14,30 +12,32 @@ input = sampleOn delta Keyboard.arrows
 type Position = {x:Int, y:Int}
 type Direction = {x:Int, y:Int}
 type Model = {
-    direction:Direction
-    , position:Position
+    position:Position
     , speed:Int}
 
 rabbitModel : Model
 rabbitModel = {
-    direction = { x=0, y=0 }
-    , position = { x=0, y=0 }
-    ,speed=10}
+    position = { x=0, y=0 }
+    ,speed=5}
 
 sausageModel : Model
 sausageModel = {
-    direction = { x=-1, y=0 }
-    , position = { x=200, y=50 }
-    ,speed=1}
+    position = { x=200, y=50 }
+    ,speed=2}
 
-walk : Direction -> Model -> Model
-walk dir m =
-    let pos_x = m.position.x
-        pos_y = m.position.y
-        speed = m.speed
-    in { m | direction <- dir,
-             position <- { x=pos_x + dir.x*speed, y=pos_y + dir.y*speed}
-       }
+moveRabbit : Direction -> Model -> Model
+moveRabbit direction model =
+    let pos_x = model.position.x
+        pos_y = model.position.y
+        speed = model.speed
+    in { model | position <- { x=pos_x + direction.x*speed, y=pos_y + direction.y*speed} }
+
+moveSausage : Time -> Model -> Model
+moveSausage time model =
+    let pos_x = model.position.x
+        pos_y = model.position.y
+        speed = model.speed
+    in { model | position <- { x=pos_x + -1*speed, y=pos_y} }
 
 -- Display
 renderRabbit : Form
@@ -49,7 +49,7 @@ rabbitAt (width, height) model =
         move (toFloat <| model.position.x, toFloat <| model.position.y) renderRabbit]
 
 rabbit : Signal Element
-rabbit = lift2 rabbitAt Window.dimensions (foldp walk rabbitModel input)
+rabbit = lift2 rabbitAt Window.dimensions (foldp moveRabbit rabbitModel input)
 
 renderSausage : Form
 renderSausage = let height = 41
@@ -60,6 +60,8 @@ sausageAt (width, height) model =
     collage width height [
         move (toFloat <| model.position.x, toFloat <| model.position.y) renderSausage]
 
+sausage : Signal Element
+sausage = lift2 sausageAt Window.dimensions (foldp moveSausage sausageModel delta)
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
@@ -74,7 +76,7 @@ background : Signal Element
 background = lift backgroundAt Window.dimensions
 
 
-merge : Element -> Element -> Element
-merge fig1 fig2 = layers [fig1, fig2]
+merge : Element -> Element -> Element -> Element
+merge fig1 fig2 fig3 = layers [fig1, fig2, fig3]
 
-main = lift2 merge background rabbit
+main = merge <~ background ~ rabbit ~ sausage
