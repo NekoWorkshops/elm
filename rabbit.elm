@@ -1,17 +1,23 @@
 import Keyboard
 import Window
+import Time (..)
+import Signal (..)
+import Graphics.Collage (..)
+import Graphics.Element (..) 
+import Color (..)
 
 -- Input
 delta : Signal Time
-delta = fps 60
+delta = (fps 60)
 
 input : Signal Direction
 input = sampleOn delta Keyboard.arrows
 
 -- Model
-type Position = {x:Int, y:Int}
-type Direction = {x:Int, y:Int}
-type Model = {
+
+type alias Position = {x:Int, y:Int}
+type alias Direction = {x:Int, y:Int}
+type alias Model = {
     position:Position
     , speed:Int}
 
@@ -49,7 +55,7 @@ rabbitAt (width, height) model =
         move (toFloat <| model.position.x, toFloat <| model.position.y) renderRabbit]
 
 rabbit : Signal Element
-rabbit = lift2 rabbitAt Window.dimensions (foldp moveRabbit rabbitModel input)
+rabbit = map2 rabbitAt Window.dimensions (foldp moveRabbit rabbitModel input)
 
 renderSausage : Form
 renderSausage = let height = 41
@@ -61,7 +67,7 @@ sausageAt (width, height) model =
         move (toFloat <| model.position.x, toFloat <| model.position.y) renderSausage]
 
 sausage : Signal Element
-sausage = lift2 sausageAt Window.dimensions (foldp moveSausage sausageModel delta)
+sausage = map2 sausageAt Window.dimensions (foldp moveSausage sausageModel delta)
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
@@ -73,10 +79,10 @@ backgroundAt (width, height) =
     collage width height [renderBackground (width, height)]
 
 background : Signal Element
-background = lift backgroundAt Window.dimensions
+background = map backgroundAt Window.dimensions
 
 
 merge : Element -> Element -> Element -> Element
 merge fig1 fig2 fig3 = layers [fig1, fig2, fig3]
-
+ 
 main = merge <~ background ~ rabbit ~ sausage
