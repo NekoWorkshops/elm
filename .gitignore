@@ -1,3 +1,6 @@
 Elm-Platform
 cache
 build
+elm-package.json
+elm-stuff
+elm.js
