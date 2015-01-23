@@ -5,10 +5,20 @@ import Signal (..)
 import Graphics.Collage (..)
 import Graphics.Element (..) 
 import Color (..)
+import Random (..)
 
 -- Input
 delta : Signal Time
 delta = (fps 60)
+
+zip : Signal a -> Signal b -> Signal (a,b)
+zip = map2 (\x y -> (x,y))
+
+addSize : Signal a -> Signal ((Int, Int), a)
+addSize = zip Window.dimensions
+
+deltaSizes : Signal (Int, Int)
+deltaSizes = sampleOn delta Window.dimensions
 
 input : Signal Direction
 input = sampleOn delta Keyboard.arrows
@@ -28,46 +38,61 @@ rabbitModel = {
 
 sausageModel : Model
 sausageModel = {
-    position = { x=200, y=50 }
+    position = { x=100, y=50 }
     ,speed=2}
 
-moveRabbit : Direction -> Model -> Model
-moveRabbit direction model =
-    let pos_x = model.position.x
-        pos_y = model.position.y
-        speed = model.speed
-    in { model | position <- { x=pos_x + direction.x*speed, y=pos_y + direction.y*speed} }
+type alias Update = ((Int, Int), Direction)
+type alias World = {
+        rabbit: Model,
+        sausage: Model,
+        seed: Seed
+    }
 
-moveSausage : Time -> Model -> Model
-moveSausage time model =
+moveRabbit : Update -> Model -> Model -> Model
+moveRabbit ((width, height), direction) _ model =
     let pos_x = model.position.x
         pos_y = model.position.y
         speed = model.speed
-    in { model | position <- { x=pos_x + -1*speed, y=pos_y} }
+    in { model | position <- { x=clamp (-width // 2) (width // 2) (pos_x  + direction.x*speed), y=clamp (-height // 2) (height // 2) ( pos_y + direction.y*speed)} }
+
+moveSausage : Update -> World -> World
+moveSausage ((width, height), _) world =
+    let rabbit = world.rabbit
+        sausage = world.sausage
+        pos_x = sausage.position.x
+        pos_y = sausage.position.y
+        speed = sausage.speed
+        (x', seed') =
+                if abs(pos_x - rabbit.position.x) < 10
+                then generate (int -(width // 2) (width // 2)) world.seed
+                else (pos_x + speed, world.seed)
+
+    in { world | seed <- seed'
+               , sausage <- 
+                { sausage
+                        | position <- { x=x', y=pos_y}
+                        , speed <- (if pos_x >= width // 2 then -(abs speed) else speed)
+                }
+        }
+
+updateWorld : Update -> World -> World
+updateWorld sig world = 
+        let world' = moveSausage sig world
+        in { world' | rabbit <- moveRabbit sig world'.sausage world'.rabbit }
+
+initialWorld : World
+initialWorld = { rabbit = rabbitModel, sausage = sausageModel, seed = initialSeed 12345 }
 
 -- Display
 renderRabbit : Form
 renderRabbit = toForm <| image 256 128 "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/canardage_lapin.png"
 
-rabbitAt : (Int, Int) -> Model -> Element
-rabbitAt (width, height) model =
-    collage width height [
-        move (toFloat <| model.position.x, toFloat <| model.position.y) renderRabbit]
-
-rabbit : Signal Element
-rabbit = map2 rabbitAt Window.dimensions (foldp moveRabbit rabbitModel input)
+rabbitAndSausageModels : Signal World
+rabbitAndSausageModels = foldp updateWorld initialWorld (addSize input)
 
 renderSausage : Form
 renderSausage = let height = 41
-                in move (100, 100) (toForm <| image 128 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/saucisse_pourrie.png")
-
-sausageAt : (Int, Int) -> Model -> Element
-sausageAt (width, height) model =
-    collage width height [
-        move (toFloat <| model.position.x, toFloat <| model.position.y) renderSausage]
-
-sausage : Signal Element
-sausage = map2 sausageAt Window.dimensions (foldp moveSausage sausageModel delta)
+                in (toForm <| image 128 height "https://raw.githubusercontent.com/dboissier/canardage-web/master/src/images/saucisse_pourrie.png")
 
 renderBackground : (Int, Int) -> Form
 renderBackground (width, height) =
@@ -81,8 +106,20 @@ backgroundAt (width, height) =
 background : Signal Element
 background = map backgroundAt Window.dimensions
 
+merge : Element -> Element -> Element
+merge bg sprs = layers [bg, sprs]
 
-merge : Element -> Element -> Element -> Element
-merge fig1 fig2 fig3 = layers [fig1, fig2, fig3]
+moveSprite : Model -> Form -> Form
+moveSprite m = move (toFloat m.position.x, toFloat m.position.y)
+
+rabbitAndSausageAt : (Int, Int) -> World -> Element
+rabbitAndSausageAt (width, height) {rabbit, sausage} =
+    collage width height [
+        moveSprite rabbit renderRabbit,
+        moveSprite sausage renderSausage
+    ]
+
+sprites : Signal Element
+sprites = map2 rabbitAndSausageAt Window.dimensions rabbitAndSausageModels
  
-main = merge <~ background ~ rabbit ~ sausage
+main = map2 merge background sprites
