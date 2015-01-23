@@ -71,7 +71,9 @@ moveSausage ((width, height), _) world =
                , sausage <- 
                 { sausage
                         | position <- { x=x', y=pos_y}
-                        , speed <- (if pos_x >= width // 2 then -(abs speed) else speed)
+                        , speed <- (if | pos_x >= width // 2 -> -(abs(speed))
+                                       | pos_x <= -width // 2 -> abs(speed)
+                                       | otherwise -> speed)
                 }
         }
 
